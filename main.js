@@ -104,50 +104,54 @@ function parseTeam() {
         lines.forEach(line => {
             line = line.trim();
             if(line == '') {
-                let name = team[i].get('name');
-                if(!name) {
-                    throw new Error('No Species');
-                }
-                else {
-                    let entry = Pokedex[getNormalName(name)];
-                    if(!entry) {
-                        throw new Error('Invalid Species');
+                if(i >= 0) {
+                    console.log(i);
+                    let name = team[i].get('name');
+                    if(!name) {
+                        throw new Error('No Species');
                     }
-                    let tera = team[i].get('tera');
-                    if(!tera) {
-                        if('forceTeraType' in entry) {
-                            team[i].set('tera', entry.forceTeraType);
+                    else {
+                        console.log(getNormalName(name));
+                        let entry = Pokedex[getNormalName(name)];
+                        if(!entry) {
+                            throw new Error('Invalid Species');
+                        }
+                        let tera = team[i].get('tera');
+                        if(!tera) {
+                            if('forceTeraType' in entry) {
+                                team[i].set('tera', entry.forceTeraType);
+                            }
+                            else {
+                                team[i].set('tera', entry.types[0]);
+                            }
                         }
                         else {
-                            team[i].set('tera', entry.types[0]);
-                        }
-                    }
-                    else {
-                        if('forceTeraType' in entry) {
-                            if(entry.forceTeraType.toLowerCase() != tera.toLowerCase()) {
-                                throw new Error('Invalid Tera Type');
+                            if('forceTeraType' in entry) {
+                                if(entry.forceTeraType.toLowerCase() != tera.toLowerCase()) {
+                                    throw new Error('Invalid Tera Type');
+                                }
                             }
                         }
-                    }
-                    let ability = team[i].get('ability');
-                    if(!ability) {
-                        team[i].set('ability', entry.abilities['0']);
-                    }
-                    else {
-                        let valid = false;
-                        for(const [key, value] of Object.entries(entry.abilities)) {
-                            if(ability.toLowerCase() == value.toLowerCase()) {
-                                valid = true;
-                                break;
+                        let ability = team[i].get('ability');
+                        if(!ability) {
+                            team[i].set('ability', entry.abilities['0']);
+                        }
+                        else {
+                            let valid = false;
+                            for(const [key, value] of Object.entries(entry.abilities)) {
+                                if(ability.toLowerCase() == value.toLowerCase()) {
+                                    valid = true;
+                                    break;
+                                }
+                            }
+                            if(!valid) {
+                                throw new Error('Invalid Ability');
                             }
                         }
-                        if(!valid) {
-                            throw new Error('Invalid Ability');
+                        let moves = team[i].get('moves').length;
+                        if(moves < 1 || moves > 4) {
+                            throw new Error('Invalid Number of Moves');
                         }
-                    }
-                    let moves = team[i].get('moves').length;
-                    if(moves < 1 || moves > 4) {
-                        throw new Error('Invalid Number of Moves');
                     }
                 }
                 append = true;
@@ -203,7 +207,7 @@ function getRegion(num) {
 }
 
 function normalize(name) {
-    return name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[ -]/, '').trim()
+    return name.toLowerCase().normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '').replaceAll(/[ -]/g, '').trim()
 }
 
 function getNormalName(name) {
