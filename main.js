@@ -264,7 +264,7 @@ function createPDF() {
     if(team instanceof Error) {
         document.getElementById('error').innerText = team.toString();
     } else {
-        const doc = new jsPDF({format: 'letter'});
+        const pdf = new jsPDF({format: 'letter'});
         var hcenter = 215.9/2;
         var t1 = 12.95356;
 
@@ -276,98 +276,98 @@ function createPDF() {
         var birthday = document.getElementById('birthday').value;
         var playerId = document.getElementById('playerID').value;
 
-        doc.addFileToVFS('calibri-normal.ttf', normal);
-        doc.addFont('calibri-normal.ttf', 'calibri', 'normal');
-        doc.addFileToVFS('calibri-bold.ttf', bold);
-        doc.addFont('calibri-bold.ttf', 'calibrib', 'bold');
-        doc.addFileToVFS('calibri-bolditalic.ttf', bolditalic);
-        doc.addFont('calibri-bolditalic.ttf', 'calibriz', 'bolditalic');
+        pdf.addFileToVFS('calibri-normal.ttf', normal);
+        pdf.addFont('calibri-normal.ttf', 'calibri', 'normal');
+        pdf.addFileToVFS('calibri-bold.ttf', bold);
+        pdf.addFont('calibri-bold.ttf', 'calibrib', 'bold');
+        pdf.addFileToVFS('calibri-bolditalic.ttf', bolditalic);
+        pdf.addFont('calibri-bolditalic.ttf', 'calibriz', 'bolditalic');
 
         for(let counter = 0; counter < 2; counter++) {
             if(counter == 1) {
-                doc.addPage('letter', 'p');
+                pdf.addPage('letter', 'p');
             }
-            doc.setFontSize(7);
-            doc.setFont("calibri", 'normal');
+            pdf.setFontSize(7);
+            pdf.setFont("calibri", 'normal');
             var msg = "All Pokémon must be listed exactly as they appear in the Battle Team,";
             var s1 = 69.486197917
             var s2 = 33.591059701
-            doc.text(hcenter - s2/2 - 0.69, 272, msg, 'center');
+            pdf.text(hcenter - s2/2 - 0.69, 272, msg, 'center');
 
-            doc.setFont("calibrib", 'bold');
+            pdf.setFont("calibrib", 'bold');
             var msg = "at the level they are in the game.";
-            doc.text(hcenter - (s1 + s2)/2 + s1 + 0.06, 272, msg);
+            pdf.text(hcenter - (s1 + s2)/2 + s1 + 0.06, 272, msg);
 
-            doc.setFontSize(13);
-            doc.setFont("calibrib", 'bold');
+            pdf.setFontSize(13);
+            pdf.setFont("calibrib", 'bold');
             var msg = "Pokémon Video Game Team List";
-            doc.text(hcenter, 12.5, msg, 'center');
+            pdf.text(hcenter, 12.5, msg, 'center');
 
-            doc.setLineWidth(0.3);
+            pdf.setLineWidth(0.3);
             var x = 45;
             var y = 34.5;
             var mygap = 7;
             for (let i = 0; i < 4; i++) {
-                doc.line(x, y+mygap*i, x+65, y+mygap*i);
+                pdf.line(x, y+mygap*i, x+65, y+mygap*i);
             }
 
-            doc.setFontSize(12);
-            doc.setFont("calibrib", 'bold');
+            pdf.setFontSize(12);
+            pdf.setFont("calibrib", 'bold');
 
             var msg = "Player Name: ";
-            doc.text(45, 33, msg, "right");
+            pdf.text(45, 33, msg, "right");
 
-            doc.setFontSize(9);
+            pdf.setFontSize(9);
 
             var msg = "Trainer Name in Game: ";
-            doc.text(45, 40, msg, "right");
+            pdf.text(45, 40, msg, "right");
 
             var msg = "Battle Team Number / Name: ";
-            doc.text(45, 47, msg, "right");
+            pdf.text(45, 47, msg, "right");
 
             var msg = "Switch Profile Name: ";
-            doc.text(45, 54, msg, "right");
+            pdf.text(45, 54, msg, "right");
 
             var x = 155;
             var gapx = 21;
             for (let i = 0; i < 3; i++) {
-                doc.rect(x + gapx * i, 30, 4, 4);
+                pdf.rect(x + gapx * i, 30, 4, 4);
             }
 
             var msg = "Age Division: ";
-            doc.text(140, 33, msg, "right");
+            pdf.text(140, 33, msg, "right");
             var msg = "Juniors ";
-            doc.text(154, 33, msg, "right");
+            pdf.text(154, 33, msg, "right");
             var msg = "Seniors ";
-            doc.text(175, 33, msg, "right");
+            pdf.text(175, 33, msg, "right");
             var msg = "Masters ";
-            doc.text(196, 33, msg, "right");
+            pdf.text(196, 33, msg, "right");
 
-            doc.setFont("calibri", 'normal');
-            doc.setFontSize(13);
-            doc.text(playerName, 47, 33);
-            doc.text(trainerName, 47, 40);
-            doc.text(teamName, 47, 47);
-            doc.text(switchName, 47, 54);
+            pdf.setFont("calibri", 'normal');
+            pdf.setFontSize(13);
+            pdf.text(playerName, 47, 33);
+            pdf.text(trainerName, 47, 40);
+            pdf.text(teamName, 47, 47);
+            pdf.text(switchName, 47, 54);
 
             for (let i = 0; i < 6; i++) {
-                doc.setLineWidth(0.6);
+                pdf.setLineWidth(0.6);
                 var x = 10.95 + 99 * (i%2);
                 var y = 59.5 + 70 * Math.floor(i/2);
-                doc.rect(x, y, 95, 68);
+                pdf.rect(x, y, 95, 68);
 
-                doc.setLineWidth(0.3);
+                pdf.setLineWidth(0.3);
                 var startY = 12;
                 var mygap = 8;
                 for (let b = 0; b < 7; b++) {
-                    doc.line(x, y+startY+mygap*b, x+95, y+startY+mygap*b);
+                    pdf.line(x, y+startY+mygap*b, x+95, y+startY+mygap*b);
                 }
             }
 
             if (ageDivision >= 0) {
-                doc.setLineWidth(1);
+                pdf.setLineWidth(1);
                 var posX = 155 + 21 * ageDivision;
-                doc.rect(posX, 30, 4, 4, 'f');
+                pdf.rect(posX, 30, 4, 4, 'f');
             }
 
             for (let i = 0; i < 6; i++) {
@@ -387,109 +387,114 @@ function createPDF() {
                 var statY = pokeY + 19;
                 var statGapY = 8;
 
-                doc.setFontSize(13);
-                doc.setFont("calibrib", 'bold');
-                doc.text("Pokémon", textXX + (i%2) * gapX, pokeY + (Math.floor(i/2)) * gapY, "right");
-                doc.text("Tera Type", textXX + (i%2) * gapX, teraY + (Math.floor(i/2)) * gapY, "right");
-                doc.text("Ability", textXX + (i%2) * gapX, abilityY + (Math.floor(i/2)) * gapY, "right");
-                doc.text("Held Item", textXX + (i%2) * gapX, itemY + (Math.floor(i/2)) * gapY, "right");
+                pdf.setFontSize(13);
+                pdf.setFont("calibrib", 'bold');
+                pdf.text("Pokémon", textXX + (i%2) * gapX, pokeY + (Math.floor(i/2)) * gapY, "right");
+                pdf.text("Tera Type", textXX + (i%2) * gapX, teraY + (Math.floor(i/2)) * gapY, "right");
+                pdf.text("Ability", textXX + (i%2) * gapX, abilityY + (Math.floor(i/2)) * gapY, "right");
+                pdf.text("Held Item", textXX + (i%2) * gapX, itemY + (Math.floor(i/2)) * gapY, "right");
                 for (let j = 0; j < 4; j++) {
-                    doc.text("Move " + (j+1), textXX + (i%2) * gapX, moveY + (Math.floor(i/2)) * gapY + j * moveGapY, "right");
+                    pdf.text("Move " + (j+1), textXX + (i%2) * gapX, moveY + (Math.floor(i/2)) * gapY + j * moveGapY, "right");
                 }
 
                 if(team.length > i) {
-                    doc.setFont("calibri", 'normal');
-                    doc.text(getFormalName(team[i].get('name')), textX + (i%2) * gapX, pokeY + (Math.floor(i/2)) * gapY);
-                    doc.text(team[i].get('tera'), textX + (i%2) * gapX, teraY + (Math.floor(i/2)) * gapY);
-                    doc.text(team[i].get('ability'), textX + (i%2) * gapX, abilityY + (Math.floor(i/2)) * gapY);
-                    doc.text(team[i].get('item'), textX + (i%2) * gapX, itemY + (Math.floor(i/2)) * gapY);
+                    pdf.setFont("calibri", 'normal');
+                    pdf.text(getFormalName(team[i].get('name')), textX + (i%2) * gapX, pokeY + (Math.floor(i/2)) * gapY);
+                    pdf.text(team[i].get('tera'), textX + (i%2) * gapX, teraY + (Math.floor(i/2)) * gapY);
+                    pdf.text(team[i].get('ability'), textX + (i%2) * gapX, abilityY + (Math.floor(i/2)) * gapY);
+                    pdf.text(team[i].get('item'), textX + (i%2) * gapX, itemY + (Math.floor(i/2)) * gapY);
                     let moves = team[i].get('moves');
                     for (let j = 0; j < 4; j++) {
                         if(j<moves.length) {
-                            doc.text(moves[j], textX + (i%2) * gapX, moveY + (Math.floor(i/2)) * gapY + j * moveGapY);
+                            pdf.text(moves[j], textX + (i%2) * gapX, moveY + (Math.floor(i/2)) * gapY + j * moveGapY);
                         }
                     }
                 }
             }
             if (counter == 0) {
-                doc.setFontSize(13);
-                doc.setFont("calibrib", 'bold');
+                pdf.setFontSize(13);
+                pdf.setFont("calibrib", 'bold');
                 var msg = "1 of 2: ";
                 let t2 = 40.15603164;
-                doc.text(hcenter - (t1+t2)/2, 18, msg);
+                pdf.text(hcenter - (t1+t2)/2, 18, msg);
         
-                doc.setFont("calibriz", 'bolditalic');
+                pdf.setFont("calibriz", 'bolditalic');
                 var msg = "For Tournament Staff";
-                doc.text(hcenter - (t1+t2)/2 + t1, 18, msg);
+                pdf.text(hcenter - (t1+t2)/2 + t1, 18, msg);
         
-                doc.setFontSize(10);
-                doc.setFont("calibriz", 'bolditalic');
+                pdf.setFontSize(10);
+                pdf.setFont("calibriz", 'bolditalic');
                 var msg = "Complete both pages of this document. Submit this page to event staff before the tournament, at the time set by the Organizer.";
-                doc.text(hcenter, 24, msg, 'center');
+                pdf.text(hcenter, 24, msg, 'center');
         
-                doc.setLineWidth(0.3);
-                doc.setFontSize(9);
-                doc.setFont("calibrib", 'bold');
+                pdf.setLineWidth(0.3);
+                pdf.setFontSize(9);
+                pdf.setFont("calibrib", 'bold');
                 var msg = "Player ID: ";
-                doc.text(140, 43, msg, "right");
-                doc.line(140, 44.5, 180, 44.5);
-                doc.setFontSize(13);
-                doc.setFont("calibri", 'normal');
-                doc.text(playerId, 142, 43);
+                pdf.text(140, 43, msg, "right");
+                pdf.line(140, 44.5, 180, 44.5);
+                pdf.setFontSize(13);
+                pdf.setFont("calibri", 'normal');
+                pdf.text(playerId, 142, 43);
         
-                doc.setFontSize(9);
-                doc.setFont("calibrib", 'bold');
+                pdf.setFontSize(9);
+                pdf.setFont("calibrib", 'bold');
                 var msg = "Date of Birth: ";
-                doc.text(140, 51, msg, "right");
-                doc.line(140, 52.5, 180, 52.5);
-                doc.setFontSize(13);
-                doc.setFont("calibri", 'normal');
-                doc.text(birthday, 142, 51);
+                pdf.text(140, 51, msg, "right");
+                pdf.line(140, 52.5, 180, 52.5);
+                pdf.setFontSize(13);
+                pdf.setFont("calibri", 'normal');
+                pdf.text(birthday, 142, 51);
         
                 for (let i = 0; i < 6; i++) {
-                    doc.setLineWidth(0.3);
+                    pdf.setLineWidth(0.3);
                     var x = 6.5 + 99 * (i%2);
                     var y = 59.5 + 70 * Math.floor(i/2);
         
-                    doc.line(x+80, y+12, x+80, y+68);
-                    doc.setFontSize(5);
-                    doc.setFont("calibrib", 'bold');
-                    doc.text(x+81, y+14, "Level");
-                    doc.text(x+81, y+22, "HP");
-                    doc.text(x+81, y+30, "Atk");
-                    doc.text(x+81, y+38, "Def");
-                    doc.text(x+81, y+46, "Sp. Atk");
-                    doc.text(x+81, y+54, "Sp. Def");
-                    doc.text(x+81, y+62, "Speed");
-                    doc.setFontSize(13);
-                    doc.setFont("calibri", 'normal');
+                    pdf.line(x+80, y+12, x+80, y+68);
+                    pdf.setFontSize(5);
+                    pdf.setFont("calibrib", 'bold');
+                    pdf.text(x+81, y+14, "Level");
+                    pdf.text(x+81, y+22, "HP");
+                    pdf.text(x+81, y+30, "Atk");
+                    pdf.text(x+81, y+38, "Def");
+                    pdf.text(x+81, y+46, "Sp. Atk");
+                    pdf.text(x+81, y+54, "Sp. Def");
+                    pdf.text(x+81, y+62, "Speed");
+                    pdf.setFontSize(13);
+                    pdf.setFont("calibri", 'normal');
                     if(team.length > i) {
                         var stats = getStats(team[i].get('name'), team[i].get('evs'), team[i].get('ivs'), team[i].get('nature'), team[i].get('level'));
-                        doc.text(team[i].get('level').toString(), (x+80+105.95)/2 + (i%2) * (gapX-1) * 0.5, statY + (Math.floor(i/2)) * gapY + (-1*statGapY), 'center');
+                        pdf.text(team[i].get('level').toString(), (x+80+105.95)/2 + (i%2) * (gapX-1) * 0.5, statY + (Math.floor(i/2)) * gapY + (-1*statGapY), 'center');
                         for(let j = 0; j < 6; j++) {
-                            doc.text(stats[j].toString(), (x+80+105.95)/2 + (i%2) * (gapX-1) * 0.5, statY + (Math.floor(i/2)) * gapY + j * statGapY, 'center');
+                            pdf.text(stats[j].toString(), (x+80+105.95)/2 + (i%2) * (gapX-1) * 0.5, statY + (Math.floor(i/2)) * gapY + j * statGapY, 'center');
                         }
                     }
                 }
             }
             else if (counter == 1) {
-                doc.setFontSize(13);
-                doc.setFont("calibrib", 'bold');
+                pdf.setFontSize(13);
+                pdf.setFont("calibrib", 'bold');
                 var msg = "2 of 2: ";
                 let t2 = 27.908;
-                doc.text(hcenter - (t1+t2)/2, 18, msg);
+                pdf.text(hcenter - (t1+t2)/2, 18, msg);
         
-                doc.setFont("calibriz", 'bolditalic');
+                pdf.setFont("calibriz", 'bolditalic');
                 var msg = "For Opponents";
-                doc.text(hcenter - (t1+t2)/2 + t1, 18, msg);
+                pdf.text(hcenter - (t1+t2)/2 + t1, 18, msg);
         
-                doc.setFontSize(10);
-                doc.setFont("calibriz", 'bolditalic');
+                pdf.setFontSize(10);
+                pdf.setFont("calibriz", 'bolditalic');
                 var msg = "Do not lose this page! Keep it throughout the tournament, sharing it with your opponent each round.";
-                doc.text(hcenter, 24, msg, 'center');
+                pdf.text(hcenter, 24, msg, 'center');
             } 
         }
-        doc.save("OTS.pdf");
+        if(teamName == '') {
+            pdf.save("OTS.pdf");
+        }
+        else {
+            pdf.save(teamName + ".pdf");
+        }
     }
 }
 
