@@ -76,7 +76,8 @@ function parseLine(line) {
         let temp = line.indexOf(' ');
         pairs.push(['nature', line.substring(0, temp)]);
     } else if(line[0] == '-') {
-        pairs.push(['moves', line.substring(2)]);
+        line = line.replace(/[-]/, '').trim();
+        pairs.push(['moves', line]);
     } else if(index == -1) {
         let at = line.indexOf('@')
         let start = line.indexOf('(')
