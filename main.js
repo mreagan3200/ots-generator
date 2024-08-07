@@ -105,16 +105,14 @@ function parseTeam() {
             line = line.trim();
             if(line == '') {
                 if(i >= 0) {
-                    console.log(i);
                     let name = team[i].get('name');
                     if(!name) {
-                        throw new Error('No Species');
+                        throw new Error('No Species (Slot ' + (i+1).toString() + ')');
                     }
                     else {
-                        console.log(getNormalName(name));
                         let entry = Pokedex[getNormalName(name)];
                         if(!entry) {
-                            throw new Error('Invalid Species');
+                            throw new Error('Invalid Species (Slot ' + (i+1).toString() + ')');
                         }
                         let tera = team[i].get('tera');
                         if(!tera) {
@@ -128,7 +126,7 @@ function parseTeam() {
                         else {
                             if('forceTeraType' in entry) {
                                 if(entry.forceTeraType.toLowerCase() != tera.toLowerCase()) {
-                                    throw new Error('Invalid Tera Type');
+                                    throw new Error('Invalid Tera Type (Slot ' + (i+1).toString() + ')');
                                 }
                             }
                         }
@@ -145,12 +143,12 @@ function parseTeam() {
                                 }
                             }
                             if(!valid) {
-                                throw new Error('Invalid Ability');
+                                throw new Error('Invalid Ability (Slot ' + (i+1).toString() + ')');
                             }
                         }
                         let moves = team[i].get('moves').length;
                         if(moves < 1 || moves > 4) {
-                            throw new Error('Invalid Number of Moves');
+                            throw new Error('Invalid Number of Moves (Slot ' + (i+1).toString() + ')');
                         }
                     }
                 }
@@ -180,6 +178,11 @@ function parseTeam() {
     } catch(e) {
         return e;
     }
+
+    if(team.length == 0) {
+        return new Error('No Pokemon');
+    }
+
     return team;
 }
 
@@ -257,8 +260,9 @@ function getFormalName(name) {
 
 function createPDF() {
     let team = parseTeam();
+    document.getElementById('error').innerText = '';
     if(team instanceof Error) {
-        console.log(team);
+        document.getElementById('error').innerText = team.toString();
     } else {
         const doc = new jsPDF({format: 'letter'});
         var hcenter = 215.9/2;

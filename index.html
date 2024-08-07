@@ -3,51 +3,56 @@
 <head>
   <link rel="shortcut icon" href="#">
   <link rel="stylesheet" href="style.css">
-  <base href=".">
+<!--   <base href="."> -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
 <body>
-
-  <h1>OTS Generator</h1>
-
-  <div class="row">
-    <div class="column">
-      <textarea id="team" rows="35" cols="50"></textarea>
-      <br/>
-      <button id="submit">Submit</button> 
+  <header>
+    <h1>Open Team Sheet Generator</h1>
+  </header>
+  <main>
+    <div class="container group">
+      <textarea id="team" spellcheck="false"></textarea>
     </div>
-    <div class="column">
-      <label for="name">Player Name:</label>
-      <br/>
-      <input type="text" id="name" name="info">
-      <br/>
-      <label for="trainer">Trainer Name In Game:</label>
-      <br/>
-      <input type="text" id="trainer" name="info">
-      <br/>
-      <label for="teamNumber">Battle Team Number / Name</label>
-      <br/>
-      <input type="text" id="teamNumber" name="info">
-      <br/>
-      <label for="switchProfile">Switch Profile Name</label>
-      <br/>
-      <input type="text" id="switchProfile" name="info">
-      <br/>
-      <label for="playerID">Player ID</label>
-      <br/>
-      <input type="text" id="playerID" name="info">
-      <br/>
-      <label for="birthday">Date Of Birth</label>
-      <br/>
-      <input type="text" id="birthday" name="info">
-      <br/>
-      <label for="Junior">Junior</label>
-      <input type="radio" id="junior" name="ageDivision" value="0">
-      <label for="senior">Senior</label>
-      <input type="radio" id="senior" name="ageDivision" value="1">
-      <label for="master">Master</label>
-      <input type="radio" id="master" name="ageDivision" value="2" checked>
+    <div class="container group">
+      <div class="entryarea">
+        <input type="text" id="name" required>
+        <div class="labelline">Player Name</div>
+      </div>
+      <div class="entryarea">
+        <input type="text" id="trainer" required>
+        <div class="labelline">Trainer Name In Game</div>
+      </div>
+      <div class="entryarea">
+        <input type="text" id="teamNumber" required>
+        <div class="labelline">Battle Team Number / Name</div>
+      </div>
+      <div class="entryarea">
+        <input type="text" id="switchProfile" required>
+        <div class="labelline">Switch Profile Name</div>
+      </div>
+      <div class="entryarea">
+        <input type="text" id="playerID" required>
+        <div class="labelline">Player ID</div>
+      </div>
+      <div class="entryarea">
+        <input type="text" id="birthday" required>
+        <div class="labelline">Date Of Birth</div>
+      </div>
+      <div class="divisons">
+        <input id="junior" type="radio" name="ageDivision" value="0">
+        <label for="junior" class="button">Junior</label>
+        <input id="senior" type="radio" name="ageDivision" value="1">
+        <label for="senior" class="button">Senior</label>
+        <input id="master" type="radio" name="ageDivision" value="2" checked>
+        <label for="master" class="button">Master</label>
+      </div>
+      <button id="submit">Generate Team Sheet</button>
+      <div id="error"></div>
     </div>
-  </div> 
+  </main>
 </body>
   <script src="./fonts/calibri-normal.js"></script>
   <script src="./fonts/calibrib-bold.js"></script>

@@ -1,7 +1,159 @@
-.row {
-    display: flex;
-  }
-  
-  .column {
-    flex: 50%;
-  }
+@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+
+/* CSS Reset */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* End CSS Reset */
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  text-align: center;
+  background-color: #292952;
+  color: #E64A31;
+  border-bottom: 2px solid #FFD518;
+}
+
+textarea {
+  width: 70%;
+  height: 80vh;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  background-color: hsla(0, 0%, 0%, 0.3);
+  border-radius: 1rem;
+  border: none;
+  color: #FFFFFF;
+  resize: none;
+}
+
+textarea:focus {
+  outline: none;
+}
+
+main {
+  width: 100%;
+  background-image: radial-gradient(#5A62AC, #282851);
+  flex-grow: 1;
+  column-count: 2;
+  column-width: 500px;
+  column-rule: 2px solid black;
+}
+
+.container {
+  padding-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.group {
+  break-inside: avoid;
+}
+
+.entryarea {
+  display: flex;
+  position: relative;
+  height: 40px;
+  line-height: 40px;
+}
+
+input {
+  outline: none;
+  font-size: 1.3rem;
+  padding: 0 15px;  
+  line-height: 40px;
+  border-radius: 10px;
+  border: 2px solid #ffffff;
+  background: transparent;
+  transition: 0.2s ease;
+  z-index: 1;
+}
+
+.labelline {
+  position: absolute;
+  white-space: nowrap;
+  font-size: 1.2rem;
+  color: #ffffff;
+  width: 100%;
+  padding-left: 15px;
+  background-color: transparent;
+  transition: 0.2s ease;
+}
+
+input:focus, input:valid {
+  color: #E64A31;
+  border: 4px solid #BD3941;
+}
+
+input:focus + .labelline, input:valid + .labelline {
+  color: #BD3941;
+  height: 30px;
+  line-height: 30px;
+  width: min-content;
+  padding: 0 6px;
+  transform: translate(4px, -16px) scale(0.88);
+  border: 2px solid #BD3941;
+  background-color: #282851;
+  z-index: 1;
+}
+
+.divisons input[type="radio"] {
+  display: none;
+}
+
+.divisons label.button {
+  display: inline-block;
+  padding: 10px 20px;
+  margin: 5px;
+  border-radius: 5px;
+  background-color: #111111;
+  font-size: 1rem;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.divisons label.button:hover {
+  background-color: black;
+}
+
+.divisons input[type="radio"]:checked + label.button {
+  background-color: #BD3941;
+  color: black;
+}
+
+button {
+  font-size: 1.5rem;
+  padding: 1rem;
+  border: none;
+  border-radius: 1rem;
+}
+
+button:hover {
+  cursor: pointer;
+}
+
+#error {
+  font-size: 2rem;
+  padding: 0.5rem;
+  background-color: #BD3941;
+  color: white;
+  border: 2px solid #BD3941;
+  border-radius: 0.5rem;
+}
+
+#error:empty {
+  display: none;
+}
