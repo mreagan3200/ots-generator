@@ -70,10 +70,13 @@ main {
   position: relative;
   height: 40px;
   line-height: 40px;
+  width: 50%;
+  min-width: fit-content;
 }
 
 input {
   outline: none;
+  width: 100%;
   font-size: 1.2rem;
   padding: 0 15px;  
   line-height: 40px;
