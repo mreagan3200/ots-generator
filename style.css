@@ -74,6 +74,12 @@ main {
   min-width: fit-content;
 }
 
+@media only screen and (max-width: 600px) {
+  .entryarea {
+    width: 85%;
+  }
+}
+
 input {
   outline: none;
   width: 100%;
