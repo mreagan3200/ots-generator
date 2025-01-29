@@ -39,27 +39,34 @@ function getStats(name, evs, ivs, nature, level) {
     return stats;
 }
 
-function parseLine(line) {
+function parseLine(line, teamIndex) {
     let pairs = [];
     line = line.replace(/\((M|F)\)/, '').trim();
     let index = line.indexOf(':');
     let stats = ['HP', 'Atk', 'Def', 'SpA', 'SpD', 'Spe']
-    if(line.includes('Ability')) {
+    if(line.includes('Ability:')) {
         pairs.push(['ability', line.substring(index+2)]);
-    } else if(line.includes('Level')) {
+    } else if(line.includes('Level:')) {
         pairs.push(['level', parseInt(line.substring(index+2))]);
-    } else if(line.includes('Tera')) {
+    } else if(line.includes('Tera Type:')) {
         pairs.push(['tera', line.substring(index+2)]);
-    } else if(line.includes('EVs')) {
+    } else if(line.includes('EVs:')) {
         let evs = [0,0,0,0,0,0]
         let i = 0
+        let total = 0;
         stats.forEach(stat => {
             let s = line.indexOf(stat);
             if(s != -1) {
-                evs[i] = parseInt(line.substring(s-4, s).replace(/[/:]/, ''));
+                let num = parseInt(line.substring(s-4, s).replace(/[/:]/, ''));
+                if(num > 252 || num < 0)
+                    throw new Error('Invalid EV Value (Slot ' + (teamIndex+1).toString() + ') [' + (num).toString() + ' ' + stat + ']');
+                total += num;
+                evs[i] = num;
             }
             i++;
         });
+        if(total > 510)
+            throw new Error('Invalid EV Total (Slot ' + (teamIndex+1).toString() + ') [' + (total).toString() + ']');
         pairs.push(['evs', evs]);
     } else if(line.includes('IVs')) {
         let ivs = [31,31,31,31,31,31]
@@ -67,7 +74,10 @@ function parseLine(line) {
         stats.forEach(stat => {
             let s = line.indexOf(stat);
             if(s != -1) {
-                ivs[i] = parseInt(line.substring(s-3, s).replace(/[/:]/, ''));
+                let num = parseInt(line.substring(s-3, s).replace(/[/:]/, ''));
+                if(num > 31 || num < 0)
+                    throw new Error('Invalid IV Value (Slot ' + (teamIndex+1).toString() + ') [' + (num).toString() + ' ' + stat + ']');
+                ivs[i] = num;
             }
             i++;
         });
@@ -107,50 +117,63 @@ function parseTeam() {
             if(line == '') {
                 if(i >= 0) {
                     let name = team[i].get('name');
+                    let ability = team[i].get('ability');
                     if(!name) {
                         throw new Error('No Species (Slot ' + (i+1).toString() + ')');
                     }
+                    if(name.toLowerCase().includes('terapagos')) {
+                        name = 'Terapagos';
+                        ability = 'Tera Shift';
+                    }
+                    else if(name.toLowerCase().includes('zacian'))
+                        name = 'Zacian';
+                    else if(name.toLowerCase().includes('zamazenta'))
+                        name = 'Zamazenta';
+                    team[i].set('name', name);
+                    team[i].set('ability', ability);
+                    let entry = Pokedex[getNormalName(name)];
+                    if(!entry) {
+                        throw new Error('Invalid Species (Slot ' + (i+1).toString() + ')');
+                    }
+                    let tera = team[i].get('tera');
+                    if(!tera) {
+                        if('forceTeraType' in entry) {
+                            team[i].set('tera', entry.forceTeraType);
+                        }
+                        else {
+                            team[i].set('tera', entry.types[0]);
+                        }
+                    }
                     else {
-                        let entry = Pokedex[getNormalName(name)];
-                        if(!entry) {
-                            throw new Error('Invalid Species (Slot ' + (i+1).toString() + ')');
-                        }
-                        let tera = team[i].get('tera');
-                        if(!tera) {
-                            if('forceTeraType' in entry) {
-                                team[i].set('tera', entry.forceTeraType);
-                            }
-                            else {
-                                team[i].set('tera', entry.types[0]);
+                        if('forceTeraType' in entry) {
+                            if(entry.forceTeraType.toLowerCase() != tera.toLowerCase()) {
+                                throw new Error('Invalid Tera Type (Slot ' + (i+1).toString() + ')');
                             }
                         }
-                        else {
-                            if('forceTeraType' in entry) {
-                                if(entry.forceTeraType.toLowerCase() != tera.toLowerCase()) {
-                                    throw new Error('Invalid Tera Type (Slot ' + (i+1).toString() + ')');
-                                }
+                    }
+                    if(!ability) {
+                        team[i].set('ability', entry.abilities['0']);
+                    }
+                    else {
+                        let valid = false;
+                        for(const [key, value] of Object.entries(entry.abilities)) {
+                            if(ability.toLowerCase() == value.toLowerCase()) {
+                                valid = true;
+                                break;
                             }
                         }
-                        let ability = team[i].get('ability');
-                        if(!ability) {
-                            team[i].set('ability', entry.abilities['0']);
-                        }
-                        else {
-                            let valid = false;
-                            for(const [key, value] of Object.entries(entry.abilities)) {
-                                if(ability.toLowerCase() == value.toLowerCase()) {
-                                    valid = true;
-                                    break;
-                                }
-                            }
-                            if(!valid) {
+                        if(!valid) {
+                            // if(entry.name.toLowerCase() == 'terapagos') {
+                            //     team[i].set('name', entry.name);
+                            //     team[i].set('ability', entry.abilities['0']);
+                            // }
+                            // else
                                 throw new Error('Invalid Ability (Slot ' + (i+1).toString() + ')');
-                            }
                         }
-                        let moves = team[i].get('moves').length;
-                        if(moves < 1 || moves > 4) {
-                            throw new Error('Invalid Number of Moves (Slot ' + (i+1).toString() + ')');
-                        }
+                    }
+                    let moves = team[i].get('moves').length;
+                    if(moves < 1 || moves > 4) {
+                        throw new Error('Invalid Number of Moves (Slot ' + (i+1).toString() + ')');
                     }
                 }
                 append = true;
@@ -166,7 +189,7 @@ function parseTeam() {
                     team[i].set('item', 'No Item');
                     append = false;
                 }
-                let pairs = parseLine(line);
+                let pairs = parseLine(line, i);
                 pairs.forEach(pair => {
                     if(pair[0] == 'moves') {
                         team[i].get('moves').push(pair[1]);
@@ -197,17 +220,17 @@ function getRegion(num) {
     if(num <= 493)
         return 'Sinnoh';
     if(num <= 649)
-        return 'Unova'
+        return 'Unova';
     if(num <= 721)
-        return 'Kalos'
+        return 'Kalos';
     if(num <= 809)
-        return 'Alola'
+        return 'Alola';
     if(num <= 898)
-        return 'Galar'
+        return 'Galar';
     if(num <= 905)
-        return 'Hisui'
+        return 'Hisui';
     if(num <= 1025)
-        return 'Paldea'
+        return 'Paldea';
 }
 
 function normalize(name) {
@@ -232,15 +255,14 @@ function getFormalName(name) {
     if(normalName == normalized) {
         if('baseForme' in entry) { // add baseForme if necessary
             let baseForme = entry.baseForme;
-            let excludes = ['Overcast', 'Standard', 'Meadow', 'Shield', 'Active', 'Solo', 'Disguised', 'Vanilla Cream', 'Zero']
+            let excludes = ['Overcast', 'Standard', 'Meadow', 'Shield', 'Active', 'Solo', 'Disguised', 'Vanilla Cream', 'Zero', 'Hero']
             let excluded = false;
             excludes.forEach(e => {
-                if(baseForme == e) {
+                if(baseForme == e)
                     excluded = true;
-                }
             });
             if(!excluded) {
-                name += '-' + baseForme;
+                name += ' ' + baseForme;
             }
         }
         else { // add regional forme if necessary
@@ -249,13 +271,21 @@ function getFormalName(name) {
                 entry.otherFormes.forEach(forme => {
                     regions_formes.forEach(rf => {
                         if(forme.includes(rf)) {
-                            name += '-' + getRegion(entry.num);
+                            name += ' ' + getRegion(entry.num);
                         }
                     });
                 });
             }
         }
     }
+    let dash = ['chien-pao', 'chi-yu', 'ting-lu', 'wo-chien', 'ho-oh', 'porygon-z', 'jangmo-o', 'hakamo-o', 'kommo-o'];
+    let excluded = false;
+    dash.forEach(d => {
+        if(name.toLowerCase() == d)
+            excluded = true;
+    });
+    if(!excluded)
+        name = name.replaceAll('-', ' ');
     return name;
 }
 
