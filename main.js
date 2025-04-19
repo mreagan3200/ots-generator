@@ -1,7 +1,8 @@
 import { Pokedex } from "./pokedex.js";
+import { Learnsets } from "./learnsets.js";
 
 function getNature(nature) {
-    let arr = [0,0,0,0,0,0];
+    let arr = [1,1,1,1,1,1];
     let natures = [
         ['Hardy', 'Lonely', 'Adamant', 'Naughty', 'Brave'],
         ['Bold', 'Docile', 'Impish', 'Lax', 'Relaxed'],
@@ -12,8 +13,8 @@ function getNature(nature) {
         for(let col = 0; col < 5; col++) {
             if(natures[row][col] == nature) {
                 if(row != col) {
-                    arr[row+1] = '+';
-                    arr[col+1] = '-';
+                    arr[row+1] = 1.1;
+                    arr[col+1] = 0.9;
                     return arr;
                 }
             }
@@ -30,11 +31,7 @@ function getStats(name, evs, ivs, nature, level) {
     nature = getNature(nature);
     stats[0] = Math.floor(((2*baseStats[0]+ivs[0]+Math.floor(evs[0]/4))*level)/100)+level+10;
     for(let i = 1; i < 6; i++) {
-        stats[i] = Math.floor(((2*baseStats[i]+ivs[i]+Math.floor(evs[i]/4))*level)/100)+5;
-        if(nature[i] == '-')
-            stats[i] = Math.floor(stats[i] * 0.9);
-        else if(nature[i] == '+')
-            stats[i] = Math.floor(stats[i] * 1.1);
+        stats[i] = Math.floor(Math.floor((((2*baseStats[i]+ivs[i]+Math.floor(evs[i]/4))*level)/100)+5)*nature[i]);
     }
     return stats;
 }
@@ -45,11 +42,11 @@ function parseLine(line, teamIndex) {
     let index = line.indexOf(':');
     let stats = ['HP', 'Atk', 'Def', 'SpA', 'SpD', 'Spe']
     if(line.includes('Ability:')) {
-        pairs.push(['ability', line.substring(index+2)]);
+        pairs.push(['ability', line.substring(index+1).trim()]);
     } else if(line.includes('Level:')) {
-        pairs.push(['level', parseInt(line.substring(index+2))]);
+        pairs.push(['level', parseInt(line.substring(index+1))]);
     } else if(line.includes('Tera Type:')) {
-        pairs.push(['tera', line.substring(index+2)]);
+        pairs.push(['tera', line.substring(index+1).trim()]);
     } else if(line.includes('EVs:')) {
         let evs = [0,0,0,0,0,0]
         let i = 0
@@ -109,7 +106,7 @@ function parseTeam() {
     let team = [];
     let append = true;
     let i = -1;
-    let lines = document.getElementById('team').value.split('\n');
+    let lines = document.getElementById('teamPaste').value.split('\n');
     lines.push('\n');
     try {
         lines.forEach(line => {
@@ -125,10 +122,12 @@ function parseTeam() {
                         name = 'Terapagos';
                         ability = 'Tera Shift';
                     }
-                    else if(name.toLowerCase().includes('zacian'))
+                    else if(name.toLowerCase().includes('zacian')) {
                         name = 'Zacian';
-                    else if(name.toLowerCase().includes('zamazenta'))
+                    }
+                    else if(name.toLowerCase().includes('zamazenta')) {
                         name = 'Zamazenta';
+                    }
                     team[i].set('name', name);
                     team[i].set('ability', ability);
                     let entry = Pokedex[getNormalName(name)];
@@ -163,12 +162,7 @@ function parseTeam() {
                             }
                         }
                         if(!valid) {
-                            // if(entry.name.toLowerCase() == 'terapagos') {
-                            //     team[i].set('name', entry.name);
-                            //     team[i].set('ability', entry.abilities['0']);
-                            // }
-                            // else
-                                throw new Error('Invalid Ability (Slot ' + (i+1).toString() + ')');
+                            throw new Error('Invalid Ability (Slot ' + (i+1).toString() + ')');
                         }
                     }
                     let moves = team[i].get('moves').length;
@@ -202,11 +196,9 @@ function parseTeam() {
     } catch(e) {
         return e;
     }
-
     if(team.length == 0) {
         return new Error('No Pokemon');
     }
-
     return team;
 }
 

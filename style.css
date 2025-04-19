@@ -76,6 +76,7 @@ main {
   align-items: center;
   justify-content: center;
   gap: 1.5rem;
+  width: 100%;
 }
 
 .group {
@@ -92,12 +93,15 @@ main {
 }
 
 @media only screen and (max-width: 600px) {
+  textarea {
+    width: 85%
+  }
   .entryarea {
     width: 85%;
   }
 }
 
-input {
+.entryarea input {
   outline: none;
   width: 100%;
   font-size: 1.2rem;
@@ -110,7 +114,7 @@ input {
   z-index: 1;
 }
 
-.labelline {
+.entryarea .labelline {
   position: absolute;
   white-space: nowrap;
   font-size: 1.2rem;
@@ -121,7 +125,7 @@ input {
   transition: 0.2s ease;
 }
 
-input:focus, input:valid {
+.entryarea input:focus, .entryarea input:valid {
   color: #FFD518;
   border: 4px solid #FFD518;
 }
@@ -139,11 +143,15 @@ input:focus + .labelline, input:valid + .labelline {
   z-index: 1;
 }
 
-.divisons input[type="radio"] {
+input[type="radio"] {
   display: none;
 }
 
-.divisons label.button {
+label {
+  text-align: center;
+}
+
+label.button {
   display: inline-block;
   padding: 10px 20px;
   margin: 5px;
@@ -155,11 +163,11 @@ input:focus + .labelline, input:valid + .labelline {
   transition: background-color 0.3s ease;
 }
 
-.divisons label.button:hover {
+label.button:hover {
   background-color: black;
 }
 
-.divisons input[type="radio"]:checked + label.button {
+input[type="radio"]:checked + label.button {
   background-color: #BD3941;
   color: black;
 }
@@ -169,7 +177,7 @@ button {
   padding: 1rem;
   border: none;
   border-radius: 1rem;
-  color: #111111;
+  color: #111111; 
 }
 
 button:hover {
@@ -177,7 +185,7 @@ button:hover {
 }
 
 #error {
-  font-size: 2rem;
+  font-size: 1.5rem;
   padding: 0.5rem;
   background-color: #BD3941;
   color: white;
@@ -187,4 +195,17 @@ button:hover {
 
 #error:empty {
   display: none;
+}
+
+.divisions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  flex-basis: 33%;
+  width: 100%;
+}
+
+.divisions label {
+  flex-basis: 20%;
 }
