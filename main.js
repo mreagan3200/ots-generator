@@ -1,6 +1,9 @@
 import { Pokedex } from "./pokedex.js";
 import { Learnsets } from "./learnsets.js";
 
+//TODO: Add Warning for Protect on pokemon that can learn Detect or other Protect varients
+//TODO: Add Help Page: Include where to find information for teamsheet and information on Showdown Export Format
+
 function getNature(nature) {
     let arr = [1,1,1,1,1,1];
     let natures = [
@@ -56,14 +59,16 @@ function parseLine(line, teamIndex) {
             if(s != -1) {
                 let num = parseInt(line.substring(s-4, s).replace(/[/:]/, ''));
                 if(num > 252 || num < 0)
-                    throw new Error('Invalid EV Value (Slot ' + (teamIndex+1).toString() + ') [' + (num).toString() + ' ' + stat + ']');
+                    if(errorChecking)
+                        throw new Error('Invalid EV Value (Slot ' + (teamIndex+1).toString() + ') [' + (num).toString() + ' ' + stat + ']');
                 total += num;
                 evs[i] = num;
             }
             i++;
         });
         if(total > 510)
-            throw new Error('Invalid EV Total (Slot ' + (teamIndex+1).toString() + ') [' + (total).toString() + ']');
+            if(errorChecking)
+                throw new Error('Invalid EV Total (Slot ' + (teamIndex+1).toString() + ') [' + (total).toString() + ']');
         pairs.push(['evs', evs]);
     } else if(line.includes('IVs')) {
         let ivs = [31,31,31,31,31,31]
@@ -116,7 +121,8 @@ function parseTeam() {
                     let name = team[i].get('name');
                     let ability = team[i].get('ability');
                     if(!name) {
-                        throw new Error('No Species (Slot ' + (i+1).toString() + ')');
+                        if(errorChecking)
+                            throw new Error('No Species (Slot ' + (i+1).toString() + ')');
                     }
                     if(name.toLowerCase().includes('terapagos')) {
                         name = 'Terapagos';
@@ -124,50 +130,102 @@ function parseTeam() {
                     }
                     else if(name.toLowerCase().includes('zacian')) {
                         name = 'Zacian';
+                        let movesLen = team[i].get('moves').length;
+                        for(let moveIndex = 0; moveIndex < movesLen; moveIndex++) {
+                            if(getNormalName(team[i].get('moves')[moveIndex]).includes('behemoth')) {
+                                team[i].get('moves')[moveIndex] = 'Iron Head';
+                            }
+                        }
                     }
                     else if(name.toLowerCase().includes('zamazenta')) {
                         name = 'Zamazenta';
+                        let movesLen = team[i].get('moves').length;
+                        for(let moveIndex = 0; moveIndex < movesLen; moveIndex++) {
+                            if(getNormalName(team[i].get('moves')[moveIndex]).includes('behemoth')) {
+                                team[i].get('moves')[moveIndex] = 'Iron Head';
+                            }
+                        }
+                    }
+                    else if(name.toLowerCase().includes('calyrex')) {
+                        ability = 'As One';
                     }
                     team[i].set('name', name);
                     team[i].set('ability', ability);
-                    let entry = Pokedex[getNormalName(name)];
-                    if(!entry) {
-                        throw new Error('Invalid Species (Slot ' + (i+1).toString() + ')');
+                    let entryP = Pokedex[getNormalName(name)];
+                    let entryL = Learnsets[getNormalName(name)];
+                    if(!entryP) {
+                        if(errorChecking)
+                            throw new Error('Invalid Species (Slot ' + (i+1).toString() + ')');
                     }
                     let tera = team[i].get('tera');
                     if(!tera) {
-                        if('forceTeraType' in entry) {
-                            team[i].set('tera', entry.forceTeraType);
+                        if('forceTeraType' in entryP) {
+                            team[i].set('tera', entryP.forceTeraType);
                         }
                         else {
-                            team[i].set('tera', entry.types[0]);
+                            team[i].set('tera', entryP.types[0]);
                         }
                     }
                     else {
-                        if('forceTeraType' in entry) {
-                            if(entry.forceTeraType.toLowerCase() != tera.toLowerCase()) {
-                                throw new Error('Invalid Tera Type (Slot ' + (i+1).toString() + ')');
+                        if('forceTeraType' in entryP) {
+                            if(entryP.forceTeraType.toLowerCase() != tera.toLowerCase()) {
+                                if(errorChecking)
+                                    throw new Error('Invalid Tera Type (Slot ' + (i+1).toString() + ')');
                             }
                         }
                     }
                     if(!ability) {
-                        team[i].set('ability', entry.abilities['0']);
+                        team[i].set('ability', entryP.abilities['0']);
                     }
                     else {
                         let valid = false;
-                        for(const [key, value] of Object.entries(entry.abilities)) {
-                            if(ability.toLowerCase() == value.toLowerCase()) {
+                        for(const [key, value] of Object.entries(entryP.abilities)) {
+                            let v = value;
+                            if(v.includes('(')) {
+                                v = v.substring(0,value.indexOf('(')-1).trim();
+                            }
+                            if(ability.toLowerCase() == v.toLowerCase()) {
                                 valid = true;
                                 break;
                             }
                         }
                         if(!valid) {
-                            throw new Error('Invalid Ability (Slot ' + (i+1).toString() + ')');
+                            if(errorChecking)
+                                throw new Error('Invalid Ability (Slot ' + (i+1).toString() + ')');
                         }
                     }
                     let moves = team[i].get('moves').length;
                     if(moves < 1 || moves > 4) {
-                        throw new Error('Invalid Number of Moves (Slot ' + (i+1).toString() + ')');
+                        if(errorChecking)
+                            throw new Error('Invalid Number of Moves (Slot ' + (i+1).toString() + ')');
+                    }
+
+                    if(errorChecking) {
+                        for(let m = 0; m < moves; m++) {
+                            let moveEntry = getNormalName(team[i].get('moves')[m])
+                            let validMove = false;
+                            let learnset = entryL['learnset'];
+                            if(!learnset) {
+                                let baseSpecies = entryP['baseSpecies'];
+                                if(!baseSpecies)
+                                    throw new Error('Can\'t find learnset for ' + getFormalName(name) + ' (Slot ' + (i+1).toString() + ')')
+                                entryL = Learnsets[getNormalName(baseSpecies)]
+                                learnset = entryL['learnset'];
+                                if(!learnset)
+                                    throw new Error('Can\'t find learnset for ' + getFormalName(name) + ' (Slot ' + (i+1).toString() + ')')
+                            }
+                            if(moveEntry in learnset) {
+                                let validGensArr = entryL['learnset'][moveEntry];
+                                validGensArr.forEach(gen => {
+                                    if(gen.charAt(0) == '9') {
+                                        validMove = true;
+                                    }
+                                });
+                            }
+                            if(!validMove) {
+                                throw new Error('Invalid Move (Slot ' + (i+1).toString() + ', Move ' + (m+1).toString() + ')')
+                            }
+                        }
                     }
                 }
                 append = true;
@@ -197,7 +255,9 @@ function parseTeam() {
         return e;
     }
     if(team.length == 0) {
-        return new Error('No Pokemon');
+        if(errorChecking) {
+            return new Error('No Pokemon');
+        }
     }
     return team;
 }
@@ -282,6 +342,8 @@ function getFormalName(name) {
 }
 
 function createPDF() {
+    errorChecking = document.getElementById('eswitch').checked;
+    console.log(errorChecking);
     let team = parseTeam();
     document.getElementById('error').innerText = '';
     if(team instanceof Error) {
@@ -523,3 +585,4 @@ function createPDF() {
 
 document.getElementById('submit').addEventListener('click', createPDF);
 window.jsPDF = window.jspdf.jsPDF;
+let errorChecking = document.getElementById('eswitch').checked;
