@@ -47,7 +47,7 @@ a {
 
 textarea {
   width: 70%;
-  height: 80vh;
+  height: 72vh;
   padding: 1rem 1.5rem;
   font-size: 1rem;
   background-color: hsla(0, 0%, 0%, 0.3);
@@ -277,4 +277,14 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+
+.disclaimer {
+  font-size: 1.1rem;
+  text-align: center;
+  width: 70%;
+  color: #111111;
+  border: 2px solid #111111;
+  border-radius: 0.5rem;
+  background-color: white;
 }
