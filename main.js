@@ -32,7 +32,10 @@ function getStats(name, evs, ivs, nature, level) {
     let baseStats = [bs['hp'], bs['atk'], bs['def'], bs['spa'], bs['spd'], bs['spe']];
     let stats = [0,0,0,0,0,0];
     nature = getNature(nature);
-    stats[0] = Math.floor(((2*baseStats[0]+ivs[0]+Math.floor(evs[0]/4))*level)/100)+level+10;
+    if(baseStats[0] == 1)
+        stats[0] = 1;
+    else
+        stats[0] = Math.floor(((2*baseStats[0]+ivs[0]+Math.floor(evs[0]/4))*level)/100)+level+10;
     for(let i = 1; i < 6; i++) {
         stats[i] = Math.floor(Math.floor((((2*baseStats[i]+ivs[i]+Math.floor(evs[i]/4))*level)/100)+5)*nature[i]);
     }
@@ -105,6 +108,41 @@ function parseLine(line, teamIndex) {
             pairs.push(['name', line.trim()]);
     }
     return pairs;
+}
+
+function checkValidMove(entry) {
+    return entry.some(gen => gen.charAt(0) === '9');
+}
+
+function checkValidMoves(slot, name, pokemonEntry, learnset, moves, movesLen) {
+    for(let m = 0; m < movesLen; m++) {
+        let moveEntry = getNormalName(moves[m])
+        let validMove = false;
+        if(!learnset) {
+            let baseSpecies = entryP['baseSpecies'];
+            if(!baseSpecies)
+                throw new Error('Can\'t find learnset for ' + getFormalName(name) + ' (Slot ' + (slot+1).toString() + ')')
+            entryL = Learnsets[getNormalName(baseSpecies)]
+            learnset = entryL['learnset'];
+            if(!learnset)
+                throw new Error('Can\'t find learnset for ' + getFormalName(name) + ' (Slot ' + (slot+1).toString() + ')')
+        }
+        let prevo;
+        do {
+            let validGensArr = learnset[moveEntry];
+            if(moveEntry in learnset) {
+                validMove = checkValidMove(validGensArr);
+            }
+            prevo = pokemonEntry['prevo'];
+            if(prevo) {
+                pokemonEntry = Pokedex[getNormalName(prevo)];
+                learnset = Learnsets[getNormalName(prevo)]['learnset'];
+            }
+        } while (!validMove && prevo);
+        if(!validMove) {
+            throw new Error('Invalid Move (Slot ' + (slot+1).toString() + ', Move ' + (m+1).toString() + ')')
+        }
+    }
 }
 
 function parseTeam() {
@@ -194,38 +232,14 @@ function parseTeam() {
                                 throw new Error('Invalid Ability (Slot ' + (i+1).toString() + ')');
                         }
                     }
-                    let moves = team[i].get('moves').length;
-                    if(moves < 1 || moves > 4) {
+                    let movesLen = team[i].get('moves').length;
+                    if(movesLen < 1 || movesLen > 4) {
                         if(errorChecking)
                             throw new Error('Invalid Number of Moves (Slot ' + (i+1).toString() + ')');
                     }
 
                     if(errorChecking) {
-                        for(let m = 0; m < moves; m++) {
-                            let moveEntry = getNormalName(team[i].get('moves')[m])
-                            let validMove = false;
-                            let learnset = entryL['learnset'];
-                            if(!learnset) {
-                                let baseSpecies = entryP['baseSpecies'];
-                                if(!baseSpecies)
-                                    throw new Error('Can\'t find learnset for ' + getFormalName(name) + ' (Slot ' + (i+1).toString() + ')')
-                                entryL = Learnsets[getNormalName(baseSpecies)]
-                                learnset = entryL['learnset'];
-                                if(!learnset)
-                                    throw new Error('Can\'t find learnset for ' + getFormalName(name) + ' (Slot ' + (i+1).toString() + ')')
-                            }
-                            if(moveEntry in learnset) {
-                                let validGensArr = entryL['learnset'][moveEntry];
-                                validGensArr.forEach(gen => {
-                                    if(gen.charAt(0) == '9') {
-                                        validMove = true;
-                                    }
-                                });
-                            }
-                            if(!validMove) {
-                                throw new Error('Invalid Move (Slot ' + (i+1).toString() + ', Move ' + (m+1).toString() + ')')
-                            }
-                        }
+                        checkValidMoves(i, name, entryP, entryL['learnset'], team[i].get('moves'), movesLen);
                     }
                 }
                 append = true;
@@ -343,7 +357,6 @@ function getFormalName(name) {
 
 function createPDF() {
     errorChecking = document.getElementById('eswitch').checked;
-    console.log(errorChecking);
     let team = parseTeam();
     document.getElementById('error').innerText = '';
     if(team instanceof Error) {
