@@ -116,27 +116,30 @@ function checkValidMove(entry) {
 
 function checkValidMoves(slot, name, pokemonEntry, learnset, moves, movesLen) {
     for(let m = 0; m < movesLen; m++) {
+        let e = pokemonEntry;
+        let l = learnset;
         let moveEntry = getNormalName(moves[m])
         let validMove = false;
-        if(!learnset) {
+        if(!l) {
             let baseSpecies = entryP['baseSpecies'];
             if(!baseSpecies)
                 throw new Error('Can\'t find learnset for ' + getFormalName(name) + ' (Slot ' + (slot+1).toString() + ')')
             entryL = Learnsets[getNormalName(baseSpecies)]
-            learnset = entryL['learnset'];
-            if(!learnset)
+            l = entryL['learnset'];
+            if(!l)
                 throw new Error('Can\'t find learnset for ' + getFormalName(name) + ' (Slot ' + (slot+1).toString() + ')')
         }
         let prevo;
         do {
-            let validGensArr = learnset[moveEntry];
-            if(moveEntry in learnset) {
+            let validGensArr = l[moveEntry];
+            console.log(l);
+            if(moveEntry in l) {
                 validMove = checkValidMove(validGensArr);
             }
-            prevo = pokemonEntry['prevo'];
+            prevo = e['prevo'];
             if(prevo) {
-                pokemonEntry = Pokedex[getNormalName(prevo)];
-                learnset = Learnsets[getNormalName(prevo)]['learnset'];
+                e = Pokedex[getNormalName(prevo)];
+                l = Learnsets[getNormalName(prevo)]['learnset'];
             }
         } while (!validMove && prevo);
         if(!validMove) {
