@@ -121,18 +121,16 @@ function checkValidMoves(slot, name, pokemonEntry, learnset, moves, movesLen) {
         let moveEntry = getNormalName(moves[m])
         let validMove = false;
         if(!l) {
-            let baseSpecies = entryP['baseSpecies'];
+            let baseSpecies = e['baseSpecies'];
             if(!baseSpecies)
                 throw new Error('Can\'t find learnset for ' + getFormalName(name) + ' (Slot ' + (slot+1).toString() + ')')
-            entryL = Learnsets[getNormalName(baseSpecies)]
-            l = entryL['learnset'];
+            l = Learnsets[getNormalName(baseSpecies)]['learnset'];
             if(!l)
                 throw new Error('Can\'t find learnset for ' + getFormalName(name) + ' (Slot ' + (slot+1).toString() + ')')
         }
         let prevo;
         do {
             let validGensArr = l[moveEntry];
-            console.log(l);
             if(moveEntry in l) {
                 validMove = checkValidMove(validGensArr);
             }
@@ -155,9 +153,11 @@ function parseTeam() {
     let lines = document.getElementById('teamPaste').value.split('\n');
     lines.push('\n');
     try {
+        let itemsSet = new Set();
+        let prevLine = 'start';
         lines.forEach(line => {
             line = line.trim();
-            if(line == '') {
+            if(line == '' && prevLine != '') {
                 if(i >= 0) {
                     let name = team[i].get('name');
                     let ability = team[i].get('ability');
@@ -198,6 +198,15 @@ function parseTeam() {
                         if(errorChecking)
                             throw new Error('Invalid Species (Slot ' + (i+1).toString() + ')');
                     }
+                    console.log(i);
+                    console.log(itemsSet);
+                    if(itemsSet.has(team[i].get('item'))) {
+                        throw new Error('Duplicate Item (Slot ' + (i+1).toString() + ')');
+                    }
+                    else {
+                        itemsSet.add(team[i].get('item'));
+                    }
+
                     let tera = team[i].get('tera');
                     if(!tera) {
                         if('forceTeraType' in entryP) {
@@ -217,6 +226,14 @@ function parseTeam() {
                     }
                     if(!ability) {
                         team[i].set('ability', entryP.abilities['0']);
+                    }
+                    if('requiredItem' in entryP) {
+                        let item = team[i].get('item');
+                        if(item == 'No Item') {
+                            team[i].set('item', entryP['requiredItem']);
+                        }
+                        else if(errorChecking && item != entryP['requiredItem'])
+                            throw new Error('Invalid Item (Slot ' + (i+1).toString() + ')');
                     }
                     else {
                         let valid = false;
@@ -267,6 +284,7 @@ function parseTeam() {
                     }
                 });
             }
+            prevLine = line;
         });
     } catch(e) {
         return e;
