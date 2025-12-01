@@ -1,7 +1,6 @@
 import { Pokedex } from "./pokedex.js";
 import { Learnsets } from "./learnsets.js";
 
-//TODO: Add Warning for Protect on pokemon that can learn Detect or other Protect varients
 //TODO: Add Help Page: Include where to find information for teamsheet and information on Showdown Export Format
 
 function getNature(nature) {
@@ -134,6 +133,13 @@ function checkValidMoves(slot, name, pokemonEntry, learnset, moves, movesLen) {
             if(moveEntry in l) {
                 validMove = checkValidMove(validGensArr);
             }
+            if(!validMove && 'sketch' in l) {
+                //Moves that Smeargle cannot sketch:
+                let unsketchable = ['wickedtorque', 'blazingtorque', 'noxioustorque', 'magicaltorque', 'combattorque', 'revivalblessing', 'terastarstorm', 'darkvoid', 'hyperspacefury'];
+                if(unsketchable.indexOf(moveEntry) == -1){
+                    validMove = true;
+                }
+            }
             prevo = e['prevo'];
             if(prevo) {
                 e = Pokedex[getNormalName(prevo)];
@@ -190,16 +196,17 @@ function parseTeam() {
                     else if(name.toLowerCase().includes('calyrex')) {
                         ability = 'As One';
                     }
-                    team[i].set('name', name);
-                    team[i].set('ability', ability);
                     let entryP = Pokedex[getNormalName(name)];
                     let entryL = Learnsets[getNormalName(name)];
+                    if(!ability) {
+                        ability = entryP.abilities['0'];
+                    }
+                    team[i].set('name', name);
+                    team[i].set('ability', ability);
                     if(!entryP) {
                         if(errorChecking)
                             throw new Error('Invalid Species (Slot ' + (i+1).toString() + ')');
                     }
-                    console.log(i);
-                    console.log(itemsSet);
                     if(itemsSet.has(team[i].get('item'))) {
                         throw new Error('Duplicate Item (Slot ' + (i+1).toString() + ')');
                     }
@@ -223,9 +230,6 @@ function parseTeam() {
                                     throw new Error('Invalid Tera Type (Slot ' + (i+1).toString() + ')');
                             }
                         }
-                    }
-                    if(!ability) {
-                        team[i].set('ability', entryP.abilities['0']);
                     }
                     if('requiredItem' in entryP) {
                         let item = team[i].get('item');
@@ -355,10 +359,12 @@ function getFormalName(name) {
         else { // add regional forme if necessary
             if('otherFormes' in entry) {
                 let regions_formes = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova', 'Kalos', 'Alola', 'Galar', 'Hisui', 'Paldea', 'Bloodmoon']
+                let done = false;
                 entry.otherFormes.forEach(forme => {
                     regions_formes.forEach(rf => {
-                        if(forme.includes(rf)) {
+                        if(forme.includes(rf) && !done) {
                             name += ' ' + getRegion(entry.num);
+                            done = true;
                         }
                     });
                 });
