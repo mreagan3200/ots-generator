@@ -2,43 +2,59 @@ import { Pokedex } from "./pokedex.js";
 import { Learnsets } from "./learnsets.js";
 
 //TODO: Add Help Page: Include where to find information for teamsheet and information on Showdown Export Format
+//TODO: Change Behemoth Blade/Bash into Iron Head
+//TODO: fix 'flabebe', 'floette', 'florges', 'furfrou'
+//TODO: squawkabilly colors
+//TODO: Silvally/Arceus Types
+
+//TODO: add support for Support ID
+
+let pseudoCosmeticFormes = ['Two-Segment', 'Three-Segment', 'Three', 'Four', 'Fancy', 'Pokeball', 'Original', 'Chest', 'Roaming', 
+    'Counterfeit', 'Artisan', 'Unremarkable', 'Masterpiece', 'Phony', 'Antique', 'Amped', 'Low-Key', 'Active', 'Neutral', 'Dada', 
+    'Douse', 'Shock', 'Burn', 'Chill', 'Ordinary', 'Resolute', 'Bond', 'Totem', 'Gmax', 'Eternamax',];
 
 function getNature(nature) {
     let arr = [1,1,1,1,1,1];
     let natures = [
-        ['Hardy', 'Lonely', 'Adamant', 'Naughty', 'Brave'],
-        ['Bold', 'Docile', 'Impish', 'Lax', 'Relaxed'],
-        ['Modest', 'Mild', 'Bashful', 'Rash', 'Quiet'],
-        ['Calm', 'Gentle', 'Careful', 'Quirky', 'Sassy'],
-        ['Timid', 'Hasty', 'Jolly', 'Naive', 'Serious']];
+        ['Serious', 'Lonely', 'Adamant', 'Naughty', 'Brave'],
+        ['Bold', 'Hardy', 'Impish', 'Lax', 'Relaxed'],
+        ['Modest', 'Mild', 'Docile', 'Rash', 'Quiet'],
+        ['Calm', 'Gentle', 'Careful', 'Bashful', 'Sassy'],
+        ['Timid', 'Hasty', 'Jolly', 'Naive', 'Quirky']];
     for(let row = 0; row < 5; row++) {
         for(let col = 0; col < 5; col++) {
-            if(natures[row][col] == nature) {
+            if(natures[row][col].toLowerCase() == nature.toLowerCase()) {
                 if(row != col) {
                     arr[row+1] = 1.1;
                     arr[col+1] = 0.9;
                     return arr;
                 }
+                else return arr;
             }
         }
     }
-    return arr;
+    throw new Error('Invalid Stat Alignment [' + nature + ']');
 }
 
-function getStats(name, evs, ivs, nature, level) {
-    name = name.toLowerCase().replace(/[ -]/, '').trim();
-    let bs = Pokedex[getNormalName(name)].baseStats;
-    let baseStats = [bs['hp'], bs['atk'], bs['def'], bs['spa'], bs['spd'], bs['spe']];
-    let stats = [0,0,0,0,0,0];
-    nature = getNature(nature);
-    if(baseStats[0] == 1)
-        stats[0] = 1;
-    else
-        stats[0] = Math.floor(((2*baseStats[0]+ivs[0]+Math.floor(evs[0]/4))*level)/100)+level+10;
-    for(let i = 1; i < 6; i++) {
-        stats[i] = Math.floor(Math.floor((((2*baseStats[i]+ivs[i]+Math.floor(evs[i]/4))*level)/100)+5)*nature[i]);
+function getStats(name, evs, nature, level) {
+    try {
+        name = name.toLowerCase().replace(/[ -]/, '').trim();
+        let bs = Pokedex[normalize(name)].baseStats;
+        let baseStats = [bs['hp'], bs['atk'], bs['def'], bs['spa'], bs['spd'], bs['spe']];
+        let stats = [0,0,0,0,0,0];
+        nature = getNature(nature);
+        if(baseStats[0] == 1)
+            stats[0] = 1;
+        else
+            stats[0] = baseStats[0] + evs[0] + 75;
+        for(let i = 1; i < 6; i++) {
+            stats[i] = Math.floor((baseStats[i] + evs[i] + 20)*nature[i]);
+        }
+        return stats;
     }
-    return stats;
+    catch(e) {
+        return e;
+    }
 }
 
 function parseLine(line, teamIndex) {
@@ -60,7 +76,7 @@ function parseLine(line, teamIndex) {
             let s = line.indexOf(stat);
             if(s != -1) {
                 let num = parseInt(line.substring(s-4, s).replace(/[/:]/, ''));
-                if(num > 252 || num < 0)
+                if(num > 32 || num < 0)
                     if(errorChecking)
                         throw new Error('Invalid EV Value (Slot ' + (teamIndex+1).toString() + ') [' + (num).toString() + ' ' + stat + ']');
                 total += num;
@@ -68,24 +84,10 @@ function parseLine(line, teamIndex) {
             }
             i++;
         });
-        if(total > 510)
+        if(total > 66)
             if(errorChecking)
                 throw new Error('Invalid EV Total (Slot ' + (teamIndex+1).toString() + ') [' + (total).toString() + ']');
         pairs.push(['evs', evs]);
-    } else if(line.includes('IVs')) {
-        let ivs = [31,31,31,31,31,31]
-        let i = 0
-        stats.forEach(stat => {
-            let s = line.indexOf(stat);
-            if(s != -1) {
-                let num = parseInt(line.substring(s-3, s).replace(/[/:]/, ''));
-                if(num > 31 || num < 0)
-                    throw new Error('Invalid IV Value (Slot ' + (teamIndex+1).toString() + ') [' + (num).toString() + ' ' + stat + ']');
-                ivs[i] = num;
-            }
-            i++;
-        });
-        pairs.push(['ivs', ivs]);
     } else if(line.includes('Nature')) {
         let temp = line.indexOf(' ');
         pairs.push(['nature', line.substring(0, temp)]);
@@ -110,20 +112,21 @@ function parseLine(line, teamIndex) {
 }
 
 function checkValidMove(entry) {
-    return entry.some(gen => gen.charAt(0) === '9');
+    // return entry.some(gen => gen.charAt(0) === '9');
+    return true;
 }
 
 function checkValidMoves(slot, name, pokemonEntry, learnset, moves, movesLen) {
     for(let m = 0; m < movesLen; m++) {
         let e = pokemonEntry;
         let l = learnset;
-        let moveEntry = getNormalName(moves[m])
+        let moveEntry = normalize(moves[m])
         let validMove = false;
         if(!l) {
             let baseSpecies = e['baseSpecies'];
             if(!baseSpecies)
                 throw new Error('Can\'t find learnset for ' + getFormalName(name) + ' (Slot ' + (slot+1).toString() + ')')
-            l = Learnsets[getNormalName(baseSpecies)]['learnset'];
+            l = Learnsets[normalize(baseSpecies)]['learnset'];
             if(!l)
                 throw new Error('Can\'t find learnset for ' + getFormalName(name) + ' (Slot ' + (slot+1).toString() + ')')
         }
@@ -142,8 +145,8 @@ function checkValidMoves(slot, name, pokemonEntry, learnset, moves, movesLen) {
             }
             prevo = e['prevo'];
             if(prevo) {
-                e = Pokedex[getNormalName(prevo)];
-                l = Learnsets[getNormalName(prevo)]['learnset'];
+                e = Pokedex[normalize(prevo)];
+                l = Learnsets[normalize(prevo)]['learnset'];
             }
         } while (!validMove && prevo);
         if(!validMove) {
@@ -167,84 +170,134 @@ function parseTeam() {
                 if(i >= 0) {
                     let name = team[i].get('name');
                     let ability = team[i].get('ability');
+                    let item = team[i].get('item');
+                    let tera = team[i].get('tera');
+                    let moves = team[i].get('moves')
+                    let movesLen = moves.length;
                     if(!name) {
                         if(errorChecking)
                             throw new Error('No Species (Slot ' + (i+1).toString() + ')');
                     }
-                    if(name.toLowerCase().includes('terapagos')) {
-                        name = 'Terapagos';
-                        ability = 'Tera Shift';
-                    }
-                    else if(name.toLowerCase().includes('zacian')) {
-                        name = 'Zacian';
-                        let movesLen = team[i].get('moves').length;
-                        for(let moveIndex = 0; moveIndex < movesLen; moveIndex++) {
-                            if(getNormalName(team[i].get('moves')[moveIndex]).includes('behemoth')) {
-                                team[i].get('moves')[moveIndex] = 'Iron Head';
-                            }
-                        }
-                    }
-                    else if(name.toLowerCase().includes('zamazenta')) {
-                        name = 'Zamazenta';
-                        let movesLen = team[i].get('moves').length;
-                        for(let moveIndex = 0; moveIndex < movesLen; moveIndex++) {
-                            if(getNormalName(team[i].get('moves')[moveIndex]).includes('behemoth')) {
-                                team[i].get('moves')[moveIndex] = 'Iron Head';
-                            }
-                        }
-                    }
-                    else if(name.toLowerCase().includes('calyrex')) {
-                        ability = 'As One';
-                    }
-                    let entryP = Pokedex[getNormalName(name)];
-                    let entryL = Learnsets[getNormalName(name)];
-                    if(!ability) {
-                        ability = entryP.abilities['0'];
-                    }
-                    team[i].set('name', name);
-                    team[i].set('ability', ability);
+                    let entryP = Pokedex[normalize(name)];
                     if(!entryP) {
                         if(errorChecking)
                             throw new Error('Invalid Species (Slot ' + (i+1).toString() + ')');
                     }
-                    if(itemsSet.has(team[i].get('item'))) {
+                    // Required Item(s), Ability, Move, Tera Type
+                    if('requiredItem' in entryP || 'requiredItems' in entryP) {
+                        if('requiredItem' in entryP) {
+                            if(item == 'No Item') {
+                                item = entryP.requiredItem;
+                            }
+                            if(errorChecking && item != entryP.requiredItem)
+                                throw new Error('Invalid Item (Slot ' + (i+1).toString() + ')');
+                        }
+                        else if('requiredItems' in entryP) {
+                            if(item == 'No Item') {
+                                item = entryP.requiredItems[0]
+                            }
+                            if(errorChecking) {
+                                let valid = false;
+                                entryP.requiredItems.forEach(reqItem => {
+                                    if(item == reqItem){
+                                        valid = true;
+                                    }
+                                });
+                                if(!valid) {
+                                    throw new Error('Invalid Item (Slot ' + (i+1).toString() + ')');
+                                }
+                            }   
+                        }
+                    }
+                    if(itemsSet.has(item)) { //Item Clause
                         throw new Error('Duplicate Item (Slot ' + (i+1).toString() + ')');
                     }
-                    else {
-                        itemsSet.add(team[i].get('item'));
+                    else if(item != 'No Item') {
+                        itemsSet.add(item);
                     }
 
-                    let tera = team[i].get('tera');
-                    if(!tera) {
-                        if('forceTeraType' in entryP) {
-                            team[i].set('tera', entryP.forceTeraType);
+                    let isAbilityRequired = false;
+                    if('requiredAbility' in entryP) {
+                        isAbilityRequired = true;
+                        if(!ability) {
+                            ability = entryP.abilities['0'];
+                            let peren = ability.indexOf('(');
+                            if(peren > 0){
+                                ability = ability.substring(0, peren).trim();
+                            }
                         }
-                        else {
-                            team[i].set('tera', entryP.types[0]);
+                        if(errorChecking && ability != entryP.requiredAbility)
+                            throw new Error('Invalid Ability (Slot ' + (i+1).toString() + ')');
+                    }
+                    let isMegaOrPrimal = false;
+                    if('forme' in entryP) {
+                        let forme = entryP.forme;
+                        if(forme == 'Mega' || forme == 'Primal') {
+                            isMegaOrPrimal = true;
+                            ability = undefined;
                         }
                     }
+
+                    if(movesLen < 1 || movesLen > 4) {
+                        if(errorChecking)
+                            throw new Error('Invalid Number of Moves (Slot ' + (i+1).toString() + ')');
+                    }
+                    if('requiredMove' in entryP) {
+                        let hasRequiredMove = false;
+                        moves.forEach(move => {
+                            if(move == entryP.requiredMove)
+                                hasRequiredMove = true;
+                        });
+                        if(errorChecking && !hasRequiredMove)
+                            throw new Error('Missing Required Move: ' + entryP.requiredMove + ' (Slot ' + (i+1).toString() + ')');
+                    }
+
+                    if('battleOnly' in entryP) {
+                        name = entryP.battleOnly;
+                        if(Array.isArray(name))
+                            name = name[0];
+                        entryP = Pokedex[normalize(name)];
+                    }
+                    else if('baseSpecies' in entryP) {
+                        if(entryP.forme.includes('Mega') || entryP.forme.includes('Primal') || (entryP.isCosmeticForme) || (entryP.forme && pseudoCosmeticFormes.includes(entryP.forme))) {
+                            name = entryP.baseSpecies;
+                            entryP = Pokedex[normalize(name)];
+                        }   
+                    }
+                    if(!entryP) {
+                        if(errorChecking)
+                            throw new Error('Invalid Species (Slot ' + (i+1).toString() + ')');
+                    }
+
+                    if(!tera) {
+                        tera = 'requiredTeraType' in entryP ? entryP.requiredTeraType : entryP.types[0];
+                    }
                     else {
-                        if('forceTeraType' in entryP) {
-                            if(entryP.forceTeraType.toLowerCase() != tera.toLowerCase()) {
+                        if('requiredTeraType' in entryP) {
+                            if(entryP.requiredTeraType.toLowerCase() != tera.toLowerCase()) {
                                 if(errorChecking)
                                     throw new Error('Invalid Tera Type (Slot ' + (i+1).toString() + ')');
                             }
                         }
                     }
-                    if('requiredItem' in entryP) {
-                        let item = team[i].get('item');
-                        if(item == 'No Item') {
-                            team[i].set('item', entryP['requiredItem']);
+
+                    // let entryL = Learnsets[normalize(name)]; //move this to checkValidMoves function and change logic
+                    // if(errorChecking) {
+                    //     checkValidMoves(i, name, entryP, entryL['learnset'], moves, movesLen);
+                    // }
+                    if(!isAbilityRequired) {
+                        if(!ability) {
+                            ability = entryP.abilities['0'];
+                            let peren = ability.indexOf('(');
+                            if(peren > 0){
+                                ability = ability.substring(0, peren).trim();
+                            }
                         }
-                        else if(errorChecking && item != entryP['requiredItem'])
-                            throw new Error('Invalid Item (Slot ' + (i+1).toString() + ')');
-                    }
-                    else {
                         let valid = false;
                         for(const [key, value] of Object.entries(entryP.abilities)) {
                             let v = value;
                             if(v.includes('(')) {
-                                v = v.substring(0,value.indexOf('(')-1).trim();
+                                v = v.substring(0,value.indexOf('(')).trim();
                             }
                             if(ability.toLowerCase() == v.toLowerCase()) {
                                 valid = true;
@@ -256,15 +309,11 @@ function parseTeam() {
                                 throw new Error('Invalid Ability (Slot ' + (i+1).toString() + ')');
                         }
                     }
-                    let movesLen = team[i].get('moves').length;
-                    if(movesLen < 1 || movesLen > 4) {
-                        if(errorChecking)
-                            throw new Error('Invalid Number of Moves (Slot ' + (i+1).toString() + ')');
-                    }
 
-                    if(errorChecking) {
-                        checkValidMoves(i, name, entryP, entryL['learnset'], team[i].get('moves'), movesLen);
-                    }
+                    team[i].set('tera', tera);
+                    team[i].set('item', item);
+                    team[i].set('name', name);
+                    team[i].set('ability', ability);
                 }
                 append = true;
             } else {
@@ -272,8 +321,7 @@ function parseTeam() {
                     i++;
                     team.push(new Map());
                     team[i].set('moves', []);
-                    team[i].set('level', 100);
-                    team[i].set('ivs', [31,31,31,31,31,31]);
+                    team[i].set('level', 50);
                     team[i].set('evs', [0,0,0,0,0,0]);
                     team[i].set('nature', 'Serious');
                     team[i].set('item', 'No Item');
@@ -323,66 +371,88 @@ function getRegion(num) {
     if(num <= 1025)
         return 'Paldea';
 }
-
+//lowercase no spaces/dashes
 function normalize(name) {
-    return name.toLowerCase().normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '').replaceAll(/[ -]/g, '').trim()
-}
-
-function getNormalName(name) {
-    name = normalize(name);
-    let mons = ['burmy', 'shellos', 'gastrodon', 'deerling', 'sawsbuck', 'vivillon', 'flabebe', 'floette', 'florges', 'furfrou', 'minior', 'alcremie', 'tatsugiri']
-    mons.forEach(mon => {
-        if(name.includes(mon)) {
-            name = mon;
-        }
-    });
-    return name;
+    return name.toLowerCase().normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '').replaceAll(/[ \.\'%-]/g, '').trim();
 }
 
 function getFormalName(name) {
-    let normalName = getNormalName(name);
     let normalized = normalize(name);
-    let entry = Pokedex[normalName];
-    if(normalName == normalized) {
-        if('baseForme' in entry) { // add baseForme if necessary
-            let baseForme = entry.baseForme;
-            let excludes = ['Overcast', 'Standard', 'Meadow', 'Shield', 'Active', 'Solo', 'Disguised', 'Vanilla Cream', 'Zero', 'Hero']
-            let excluded = false;
-            excludes.forEach(e => {
-                if(baseForme == e)
-                    excluded = true;
-            });
-            if(!excluded) {
-                name += ' ' + baseForme;
-            }
+    let entryP = Pokedex[normalized];
+
+    let baseSpecies = ('baseSpecies' in entryP) ? entryP.baseSpecies : entryP.name;
+    let forme = '';
+    let excluded = false; //exclude if formes have battleOnly or isCosmeticForme
+    let hasPseudoCosmeticForme = false;
+
+    if('baseSpecies' in entryP) {
+        if(entryP.forme.includes('Mega'))
+            baseSpecies = entryP.baseSpecies;
+        if(entryP.isCosmeticForme)
+            baseSpecies = entryP.baseSpecies;
+        if(pseudoCosmeticFormes.includes(entryP.forme)) {
+            hasPseudoCosmeticForme = true;
+            baseSpecies = entryP.baseSpecies;
         }
-        else { // add regional forme if necessary
-            if('otherFormes' in entry) {
-                let regions_formes = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova', 'Kalos', 'Alola', 'Galar', 'Hisui', 'Paldea', 'Bloodmoon']
-                let done = false;
-                entry.otherFormes.forEach(forme => {
-                    regions_formes.forEach(rf => {
-                        if(forme.includes(rf) && !done) {
-                            name += ' ' + getRegion(entry.num);
-                            done = true;
-                        }
-                    });
-                });
-            }
+        else if(entryP.forme.includes('Totem')) {
+            hasPseudoCosmeticForme = true;
+            baseSpecies = entryP.baseSpecies;
         }
     }
-    let dash = ['chien-pao', 'chi-yu', 'ting-lu', 'wo-chien', 'ho-oh', 'porygon-z', 'jangmo-o', 'hakamo-o', 'kommo-o'];
-    let excluded = false;
-    dash.forEach(d => {
-        if(name.toLowerCase() == d)
+    if('baseForme' in entryP) { // add baseForme if necessary
+        //otherFormes/cosmeticFormes
+        if('cosmeticFormes' in entryP) { // Contains cosmetic formes: do not add base forme
             excluded = true;
-    });
-    if(!excluded)
-        name = name.replaceAll('-', ' ');
-    return name;
+        }
+        else if(pseudoCosmeticFormes.includes(entryP.baseForme)) {
+            excluded = true;
+            hasPseudoCosmeticForme = true;
+        }
+        else if('otherFormes' in entryP) { // Contains other formes: need to check if other formes contain battleOnly tag
+            entryP.otherFormes.forEach(otherF => {
+                let entryOtherF = Pokedex[normalize(otherF)]
+                if('battleOnly' in entryOtherF && !entryOtherF.forme.includes('Mega')) {
+                    excluded = true;
+                }
+            });
+        }
+    }
+    if('otherFormes' in entryP) { // add regional forme if necessary
+        let regions_formes = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova', 'Kalos', 'Alola', 'Galar', 'Hisui', 'Paldea', 'Bloodmoon'];
+        let done = false;
+        entryP.otherFormes.forEach(otherF => {
+            regions_formes.forEach(rf => {
+                if(otherF.includes(rf) && !done) {
+                    forme = getRegion(entryP.num);
+                    done = true;
+                }
+            });
+        });
+    }
+    if(!forme) {
+        if('forme' in entryP)
+            forme = entryP.forme;
+        else if ('baseForme' in entryP) {
+            forme = entryP.baseForme;
+        }
+    }
+    // console.log('Base Species: ' + baseSpecies + ', Forme: ' + forme + ', Excluded: ' + excluded + ', PCF: ' + hasPseudoCosmeticForme);
+    if(excluded) {
+        return baseSpecies;
+    }
+    else {
+        if(hasPseudoCosmeticForme) {
+            pseudoCosmeticFormes.forEach(cForme => {
+                forme = forme.replaceAll(cForme, '');
+            });
+        }
+        forme = forme.replaceAll('-', ' ')
+        return baseSpecies + ' ' + forme;
+    }
 }
 
 function createPDF() {
+    // testAllDisplayNames();
     errorChecking = document.getElementById('eswitch').checked;
     let team = parseTeam();
     document.getElementById('error').innerText = '';
@@ -400,6 +470,7 @@ function createPDF() {
         var ageDivision = document.querySelector('input[name="ageDivision"]:checked').value;
         var birthday = document.getElementById('birthday').value;
         var playerId = document.getElementById('playerID').value;
+        var supportId = document.getElementById('supportID').value;
 
         pdf.addFileToVFS('calibri-normal.ttf', normal);
         pdf.addFont('calibri-normal.ttf', 'calibri', 'normal');
@@ -412,16 +483,10 @@ function createPDF() {
             if(counter == 1) {
                 pdf.addPage('letter', 'p');
             }
-            pdf.setFontSize(7);
+            pdf.setFontSize(8);
             pdf.setFont("calibri", 'normal');
-            var msg = "All Pokémon must be listed exactly as they appear in the Battle Team,";
-            var s1 = 69.486197917
-            var s2 = 33.591059701
-            pdf.text(hcenter - s2/2 - 0.69, 272, msg, 'center');
-
-            pdf.setFont("calibrib", 'bold');
-            var msg = "at the level they are in the game.";
-            pdf.text(hcenter - (s1 + s2)/2 + s1 + 0.06, 272, msg);
+            var msg = "All Pokémon must be listed exactly as they appear in the Battle Team.";
+            pdf.text(hcenter, 272, msg, 'center');
 
             pdf.setFontSize(13);
             pdf.setFont("calibrib", 'bold');
@@ -433,7 +498,7 @@ function createPDF() {
             var y = 34.5;
             var mygap = 7;
             for (let i = 0; i < 4; i++) {
-                pdf.line(x, y+mygap*i, x+65, y+mygap*i);
+                pdf.line(x, y+mygap*i, x+60, y+mygap*i);
             }
 
             pdf.setFontSize(12);
@@ -512,10 +577,12 @@ function createPDF() {
                 var statY = pokeY + 19;
                 var statGapY = 8;
 
-                pdf.setFontSize(13);
+                pdf.setFontSize(9);
                 pdf.setFont("calibrib", 'bold');
+                pdf.text("Stat Alignment", textXX + (i%2) * gapX, teraY + (Math.floor(i/2)) * gapY, "right");
+
+                pdf.setFontSize(13);
                 pdf.text("Pokémon", textXX + (i%2) * gapX, pokeY + (Math.floor(i/2)) * gapY, "right");
-                pdf.text("Tera Type", textXX + (i%2) * gapX, teraY + (Math.floor(i/2)) * gapY, "right");
                 pdf.text("Ability", textXX + (i%2) * gapX, abilityY + (Math.floor(i/2)) * gapY, "right");
                 pdf.text("Held Item", textXX + (i%2) * gapX, itemY + (Math.floor(i/2)) * gapY, "right");
                 for (let j = 0; j < 4; j++) {
@@ -525,7 +592,7 @@ function createPDF() {
                 if(team.length > i) {
                     pdf.setFont("calibri", 'normal');
                     pdf.text(getFormalName(team[i].get('name')), textX + (i%2) * gapX, pokeY + (Math.floor(i/2)) * gapY);
-                    pdf.text(team[i].get('tera'), textX + (i%2) * gapX, teraY + (Math.floor(i/2)) * gapY);
+                    pdf.text(team[i].get('nature'), textX + (i%2) * gapX, teraY + (Math.floor(i/2)) * gapY);
                     pdf.text(team[i].get('ability'), textX + (i%2) * gapX, abilityY + (Math.floor(i/2)) * gapY);
                     pdf.text(team[i].get('item'), textX + (i%2) * gapX, itemY + (Math.floor(i/2)) * gapY);
                     let moves = team[i].get('moves');
@@ -556,30 +623,34 @@ function createPDF() {
                 pdf.setFontSize(9);
                 pdf.setFont("calibrib", 'bold');
                 var msg = "Player ID: ";
-                pdf.text(140, 43, msg, "right");
-                pdf.line(140, 44.5, 180, 44.5);
-                pdf.setFontSize(13);
-                pdf.setFont("calibri", 'normal');
-                pdf.text(playerId, 142, 43);
-        
-                pdf.setFontSize(9);
-                pdf.setFont("calibrib", 'bold');
+                pdf.text(140, 40, msg, "right");
+                pdf.line(140, 41.5, 200, 41.5);
+
                 var msg = "Date of Birth: ";
-                pdf.text(140, 51, msg, "right");
-                pdf.line(140, 52.5, 180, 52.5);
+                pdf.text(140, 47, msg, "right");
+                pdf.line(140, 48.5, 200, 48.5);
+
+                var msg = "Support ID: ";
+                pdf.text(140, 54, msg, "right");
+                pdf.line(140, 55.5, 200, 55.5);
+
+
                 pdf.setFontSize(13);
                 pdf.setFont("calibri", 'normal');
-                pdf.text(birthday, 142, 51);
+                pdf.text(playerId, 142, 40);
+                
+                pdf.text(birthday, 142, 47);
+
+                pdf.text(supportId, 142, 54);
         
                 for (let i = 0; i < 6; i++) {
                     pdf.setLineWidth(0.3);
                     var x = 6.5 + 99 * (i%2);
                     var y = 59.5 + 70 * Math.floor(i/2);
-        
-                    pdf.line(x+80, y+12, x+80, y+68);
+                    
+                    pdf.line(x+80, y+20, x+80, y+68);
                     pdf.setFontSize(5);
                     pdf.setFont("calibrib", 'bold');
-                    pdf.text(x+81, y+14, "Level");
                     pdf.text(x+81, y+22, "HP");
                     pdf.text(x+81, y+30, "Atk");
                     pdf.text(x+81, y+38, "Def");
@@ -589,8 +660,10 @@ function createPDF() {
                     pdf.setFontSize(13);
                     pdf.setFont("calibri", 'normal');
                     if(team.length > i) {
-                        var stats = getStats(team[i].get('name'), team[i].get('evs'), team[i].get('ivs'), team[i].get('nature'), team[i].get('level'));
-                        pdf.text(team[i].get('level').toString(), (x+80+105.95)/2 + (i%2) * (gapX-1) * 0.5, statY + (Math.floor(i/2)) * gapY + (-1*statGapY), 'center');
+                        var stats = getStats(team[i].get('name'), team[i].get('evs'), team[i].get('nature'), team[i].get('level'));
+                        if(stats instanceof Error) {
+                            document.getElementById('error').innerText = stats.toString();
+                        }
                         for(let j = 0; j < 6; j++) {
                             pdf.text(stats[j].toString(), (x+80+105.95)/2 + (i%2) * (gapX-1) * 0.5, statY + (Math.floor(i/2)) * gapY + j * statGapY, 'center');
                         }
@@ -619,6 +692,28 @@ function createPDF() {
         }
         else {
             pdf.save(teamName + ".pdf");
+        }
+    }
+}
+
+function testAllDisplayNames() {
+    for (const [key, value] of Object.entries(Pokedex)) {
+        if(value.num > 0) {
+            let entryP = value;
+            let name = key;
+            if('battleOnly' in entryP) {
+                name = entryP.battleOnly;
+                if(Array.isArray(name))
+                    name = name[0];
+                entryP = Pokedex[normalize(name)];
+            }
+            else if('baseSpecies' in entryP) {
+                if(entryP.forme.includes('Mega') || entryP.forme.includes('Primal') || (entryP.isCosmeticForme) || (entryP.forme && pseudoCosmeticFormes.includes(entryP.forme))) {
+                    name = entryP.baseSpecies;
+                    entryP = Pokedex[normalize(name)];
+                }   
+            }
+            console.log(`${key}: ${getFormalName(name)}`);
         }
     }
 }
