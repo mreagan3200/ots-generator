@@ -8,6 +8,7 @@ import { Learnsets } from "./learnsets.js";
 //TODO: Silvally/Arceus Types
 
 //TODO: add support for Support ID
+//TODO: Base mega ability not working
 
 let pseudoCosmeticFormes = ['Two-Segment', 'Three-Segment', 'Three', 'Four', 'Fancy', 'Pokeball', 'Original', 'Chest', 'Roaming', 
     'Counterfeit', 'Artisan', 'Unremarkable', 'Masterpiece', 'Phony', 'Antique', 'Amped', 'Low-Key', 'Active', 'Neutral', 'Dada', 
@@ -234,7 +235,6 @@ function parseTeam() {
                         let forme = entryP.forme;
                         if(forme == 'Mega' || forme == 'Primal') {
                             isMegaOrPrimal = true;
-                            ability = undefined;
                         }
                     }
 
@@ -262,6 +262,7 @@ function parseTeam() {
                         if(entryP.forme.includes('Mega') || entryP.forme.includes('Primal') || (entryP.isCosmeticForme) || (entryP.forme && pseudoCosmeticFormes.includes(entryP.forme))) {
                             name = entryP.baseSpecies;
                             entryP = Pokedex[normalize(name)];
+                            console.log(name);
                         }   
                     }
                     if(!entryP) {
@@ -286,6 +287,7 @@ function parseTeam() {
                     //     checkValidMoves(i, name, entryP, entryL['learnset'], moves, movesLen);
                     // }
                     if(!isAbilityRequired) {
+                        console.log(ability);
                         if(!ability) {
                             ability = entryP.abilities['0'];
                             let peren = ability.indexOf('(');
